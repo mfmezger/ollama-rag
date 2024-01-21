@@ -19,3 +19,7 @@ Normal RAG
 Safeguards against Prompt Injection
 Safeguards against Harmful Content Generation
 
+## FAQ
+
+Why Weaviate?
+- Because of the ability to also use Keyword Search.
