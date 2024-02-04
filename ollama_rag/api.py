@@ -12,7 +12,7 @@ from qdrant_client import QdrantClient, models
 from qdrant_client.http.models.models import UpdateResult
 from starlette.responses import JSONResponse
 
-from aleph_alpha_rag.backend.aleph_alpha_service import (
+from ollama_rag.backend.aleph_alpha_service import (
     custom_completion_prompt_aleph_alpha,
     embedd_documents,
     embedd_text_files,
@@ -20,21 +20,21 @@ from aleph_alpha_rag.backend.aleph_alpha_service import (
     qa_aleph_alpha,
     search_documents_aleph_alpha,
 )
-from aleph_alpha_rag.data_model.request_data_model import (
+from ollama_rag.data_model.request_data_model import (
     CustomPromptCompletion,
     EmbeddTextFilesRequest,
     ExplainQARequest,
     QARequest,
     SearchRequest,
 )
-from aleph_alpha_rag.data_model.response_data_model import (
+from ollama_rag.data_model.response_data_model import (
     EmbeddingResponse,
     ExplainQAResponse,
     QAResponse,
     SearchResponse,
 )
-from aleph_alpha_rag.utils.configuration import load_config
-from aleph_alpha_rag.utils.utility import (
+from ollama_rag.utils.configuration import load_config
+from ollama_rag.utils.utility import (
     combine_text_from_list,
     create_tmp_folder,
     get_token,
@@ -106,7 +106,9 @@ def embedd_documents_wrapper(
 
     # Embedd the documents with Aleph Alpha
     logger.debug("Embedding Documents with Aleph Alpha.")
-    embedd_documents(dir=folder_name, aleph_alpha_token=token, collection_name=collection_name)
+    embedd_documents(
+        dir=folder_name, aleph_alpha_token=token, collection_name=collection_name
+    )
 
 
 @app.post("/collection/create/{collection_name}")
@@ -123,10 +125,14 @@ def create_collection(collection_name: str) -> None:
     try:
         qdrant_client.recreate_collection(
             collection_name=collection_name,
-            vectors_config=models.VectorParams(size=cfg.aleph_alpha_embeddings.size, distance=models.Distance.COSINE),
+            vectors_config=models.VectorParams(
+                size=cfg.aleph_alpha_embeddings.size, distance=models.Distance.COSINE
+            ),
         )
     except Exception:
-        logger.info(f"FAILURE: Collection {collection_name} already exists or could not created.")
+        logger.info(
+            f"FAILURE: Collection {collection_name} already exists or could not created."
+        )
     logger.info(f"SUCCESS: Collection {collection_name} created.")
 
 
@@ -213,7 +219,9 @@ async def post_embedd_text_files(request: EmbeddTextFilesRequest) -> EmbeddingRe
     if request.llm_backend is None:
         raise ValueError("Please provide a LLM Provider of choice.")
 
-    embedd_text_files(folder=tmp_dir, aleph_alpha_token=token, seperator=request.seperator)
+    embedd_text_files(
+        folder=tmp_dir, aleph_alpha_token=token, seperator=request.seperator
+    )
 
     return EmbeddingResponse(status="success", files=file_names)
 
@@ -262,7 +270,9 @@ def post_question_answer(request: QARequest) -> QAResponse:
 
     # call the qa function
 
-    answer, prompt, meta_data = qa_aleph_alpha(query=request.query, documents=documents, aleph_alpha_token=token)
+    answer, prompt, meta_data = qa_aleph_alpha(
+        query=request.query, documents=documents, aleph_alpha_token=token
+    )
 
     return QAResponse(answer=answer, prompt=prompt, meta_data=meta_data)
 
@@ -297,7 +307,9 @@ def post_explain_question_answer(request: ExplainQARequest) -> ExplainQAResponse
     documents = search_database(request.qa.search)
 
     # call the qa function
-    explanation, score, text, answer, meta_data = explain_qa(query=request.qa.search.query, document=documents, aleph_alpha_token=token)
+    explanation, score, text, answer, meta_data = explain_qa(
+        query=request.qa.search.query, document=documents, aleph_alpha_token=token
+    )
 
     return ExplainQAResponse(
         explanation=explanation,
@@ -345,13 +357,17 @@ def post_search(request: SearchRequest) -> List[SearchResponse]:
             text = d[0].page_content
             page = d[0].metadata["page"]
             source = d[0].metadata["source"]
-            response.append(SearchResponse(text=text, page=page, source=source, score=score))
-    except Exception as e:
+            response.append(
+                SearchResponse(text=text, page=page, source=source, score=score)
+            )
+    except Exception:
         for d in DOCS:
             score = d[1]
             text = d[0].page_content
             source = d[0].metadata["source"]
-            response.append(SearchResponse(text=text, page=0, source=source, score=score))
+            response.append(
+                SearchResponse(text=text, page=0, source=source, score=score)
+            )
 
     return response
 
@@ -487,7 +503,9 @@ def delete(
                         key="metadata.page",
                         match=models.MatchValue(value=page),
                     ),
-                    models.FieldCondition(key="metadata.source", match=models.MatchValue(value=source)),
+                    models.FieldCondition(
+                        key="metadata.source", match=models.MatchValue(value=source)
+                    ),
                 ],
             )
         ),
@@ -525,7 +543,9 @@ def initialize_aleph_alpha_vector_db() -> None:
     qdrant_client, cfg = initialize_qdrant_client_config()
     try:
         qdrant_client.get_collection(collection_name=cfg.qdrant.collection_name_aa)
-        logger.info(f"SUCCESS: Collection {cfg.qdrant.collection_name_aa} already exists.")
+        logger.info(
+            f"SUCCESS: Collection {cfg.qdrant.collection_name_aa} already exists."
+        )
     except Exception:
         generate_collection(
             qdrant_client,

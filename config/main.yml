@@ -1,0 +1,11 @@
+weaviate:
+  # url: 'http://localhost:8080'
+  url: https://test-w24cv8qj.weaviate.network
+  collection_name: "Ollama"
+  chunk_size: 750
+
+ollama:
+  url: "http://localhost:11434"
+  embedding_model: "phi"
+  qa_model: "stablelm2:zephyr"
+  temperature: 0.5

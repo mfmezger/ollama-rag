@@ -6,11 +6,11 @@ The Idea is to build a production ready RAG system using ollama as Retrieval and
 
 ## Components
 
-Rest Backend: FastAPI  
-LLM Provider: Ollama  
-Safeguard Provider: GuardLlama by Meta AI  
-Vector Database: Weaviate  
-LLM Engineering Framework: LlamaIndex  
+Rest Backend: FastAPI
+LLM Provider: Ollama
+Safeguard Provider: GuardLlama by Meta AI
+Vector Database: Weaviate
+LLM Engineering Framework: LlamaIndex
 Server Side Events: https://devdojo.com/bobbyiliev/how-to-use-server-sent-events-sse-with-fastapi to allow for streaming responses
 
 ## Features
@@ -23,3 +23,7 @@ Safeguards against Harmful Content Generation
 
 Why Weaviate?
 - Because of the ability to also use Keyword Search.
+
+
+
+# TODO: change back to original ollama after httpx>=0.26.0
